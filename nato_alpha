@@ -1,0 +1,236 @@
+#!/usr/bin/perl
+
+=head1 NAME
+- nato_alpha
+
+nato_alpha - script for reading aloud passwords
+
+=head1 PREREQUISITES
+
+=over 4
+
+=item 1
+Minimally I<Perl 5.8.4>.
+
+=back
+
+=head1 SYNOPSIS
+
+    USAGE: nato_alpha [-new] [<password plain text>]
+    Provides verbal script of password to be read aloud for phone or voicemail.
+    If your password has shell interpreted characters, run without arguments (recommended).
+    -new generate new password
+
+nato_alpha weTi202*rjf0
+
+   lowercase w as in whiskey
+   lowercase e as in echo
+   UPPERCASE T as in TANGO
+   lowercase i as in india
+  The number 2 
+  The number 0 
+  The number 2 
+          an * asterisk
+   lowercase r as in romeo
+   lowercase j as in juliet
+   lowercase f as in foxtrot
+  The number 0 
+
+=head1 DESCRIPTION
+
+
+=head1 METHODS/FUNCTIONS
+
+=cut
+
+## Packages used
+use strict;
+use warnings;
+use autouse 'Data::Dumper' => 'Dumper';
+use Getopt::Long qw(:config auto_help);
+
+
+### GLOBAL VARIABLES
+my $SETTING = {};
+
+my $letter = "a";
+
+my %CONVERT = map { $letter++, $_  }
+qw( alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey x-ray yankie zulu );
+
+my %SYMBOLS = (
+    '!' => "exclamation mark",
+    '"' => "double quotation mark",
+    '#' => "number (hash) sign",
+    '$' => "dollar sign",
+    '%' => "percent sign",
+    '&' => "ampersand",
+    '\'' => "apostrophe (single quote)",
+    '(' => "left parenthesis",
+    ')' => "right parenthesis", 
+    '*' => "asterisk",
+    '+' => "plus sign",
+    ',' => "comma",
+    '-' => "hyphen (dash)",
+    '.' => "period (fullstop)", 
+    '/' => "forward slash",
+    ':' => "colon",
+    ';' => "semi-colon ",
+    '<' => "less than sign",
+    '=' => "equals sign",
+    '>' => "greater than sign",
+    '?' => "question mark", 
+    '@' => "at symbol",
+    '[' => "left square bracket", 
+    '\\' => "backslash",
+    ']' => "right square bracket",
+    '^' => "caret symbol",
+    '_' => "underscore",
+    '`' => "backtick (reverse quote)", 
+    '{' => "left curly brace",
+    '|' => "vertical bar (pipe) symbol",
+    '}' => "right curly brace",
+    '~' => "tilde symbol",
+    '€' => "Euro", 
+);
+
+############################################
+##################  MAIN  ##################
+############################################
+
+=pod
+
+TODO LIST:
+
+
+=cut
+
+GetOptions($SETTING, qw( debug new ));
+
+my $pwd = $ARGV[0];
+
+if( !$pwd && !$SETTING->{new}){
+    local $| = 1;
+    print "Enter password [new password generated]: ";
+    chomp($pwd = <STDIN>);
+} elsif( !$SETTING->{new} ){
+    print "\tYou ran this with the password in the command line.
+\tRecommend running without arguements to avoid shell escaping.\n";
+}
+
+if( !$pwd ){
+    ($pwd) = generatePassword(); 
+}
+
+print "\nPassword: $pwd\n\n";
+my $lastUpper = 2;
+foreach my $char ( split //, $pwd ){
+    my $pre = '';
+    my $post = '';
+    my $upper = $char =~ /[A-Z]/;
+    if( $char =~ /[a-z]/i ){
+        $pre = ($upper ? "UPPERCASE": "lowercase" );
+        $lastUpper = $upper;
+        $post = "as in ". ( $upper ? uc( $CONVERT{lc $char} || $char ) : ( $CONVERT{$char} || $char ) );
+    } elsif ( $char =~ /\d/ ){
+        $pre = "The number";
+    } else {
+        $post = exists($SYMBOLS{$char}) ? $SYMBOLS{$char} : "symbol";
+        $pre = $post =~ /^[aeiou]/i ? "an" : "a";
+    }
+    printf "%12s %s %s\n", $pre, $char, $post;
+}
+
+print "\n";
+
+
+
+
+################  MAIN END  ##################
+
+
+
+############################################
+###############  FUNCTIONS  ################
+############################################
+
+
+
+
+sub generatePassword {
+=pod
+
+=over 4
+
+=item generatePassword
+
+I<Arguements>: 
+
+I<Returns>: 
+
+=back
+
+=cut
+
+my( $length ) = @_;
+
+$length = 10 unless $length;
+my $password = '';
+my $possible = 'abcdefghijkmnpqrstuvwxyz23456789ABCDEFGHJKLMNPQRSTUVWXYZ~!@#$%^&*()-=_+|[]{};<>,./?';
+while (length($password) < $length) {
+    $password .= substr($possible, (int(rand(length($possible)))), 1);
+    $password =~ s/^\W//g; # must start with an alphanumeric
+}
+return $password
+
+} ################################################## END generatePassword
+
+
+
+
+
+sub debug {
+=pod
+
+=over 4
+
+=item debug
+
+I<Arguments>: 
+
+I<Returns>: 
+
+=back
+
+=cut
+
+my(@args) = @_;
+
+return unless $SETTING->{debug};
+
+foreach my $arg (@args){
+  if( ref( $arg ) ){
+    print "DEBUG START:\n", Dumper( $arg );
+    print "DEBUG END\n";
+  } else {
+    print "DEBUG: $arg\n";
+  }
+}
+
+} ################################################## END debug
+
+
+
+
+=head1 AUTHORS
+
+Nikola Janceski <deathanchor@github.com>
+
+=head1 BUGS and CAVEATS
+
+=cut
+
+
+
+__END__
+
